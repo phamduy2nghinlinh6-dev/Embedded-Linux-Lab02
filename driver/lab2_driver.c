@@ -1,3 +1,6 @@
+
+#include <linux/proc_fs.h>
+#include <linux/seq_file.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/fs.h>
@@ -27,6 +30,32 @@ static struct class  *lab2_class  = NULL;
 static struct device *lab2_device = NULL;
 static DEFINE_MUTEX(lab2_mutex);
 
+/* ===== PROCFS Implementation ===== */
+static struct proc_dir_entry *proc_entry;
+
+static int lab2_proc_show(struct seq_file *m, void *v) {
+    seq_printf(m, "LAB-02 Driver Statistics\n");
+    seq_printf(m, "========================\n");
+    seq_printf(m, "Driver name  : %s\n", DEVICE_NAME);
+    seq_printf(m, "Major number : %d\n", major_number);
+    seq_printf(m, "Buffer size  : %d bytes\n", BUFFER_SIZE);
+    seq_printf(m, "Data length  : %d bytes\n", buffer_len);
+    seq_printf(m, "Open count   : %d\n", open_count);
+    if (buffer_len > 0)
+        seq_printf(m, "Last data    : [%s]\n", device_buffer);
+    return 0;
+}
+
+static int lab2_proc_open(struct inode *inode, struct file *file) {
+    return single_open(file, lab2_proc_show, NULL);
+}
+
+static const struct proc_ops lab2_proc_fops = {
+    .proc_open    = lab2_proc_open,
+    .proc_read    = seq_read,
+    .proc_lseek   = seq_lseek,
+    .proc_release = single_release,
+};
 static int lab2_open(struct inode *inode, struct file *file) {
     mutex_lock(&lab2_mutex);
     open_count++;
@@ -82,6 +111,38 @@ static struct file_operations lab2_fops = {
   .read    = lab2_read,
     .write   = lab2_write,
 };
+/* ===== SYSFS Implementation ===== */
+static ssize_t buffer_len_show(struct device *dev,
+                               struct device_attribute *attr, char *buf) {
+    return sprintf(buf, "%d\n", buffer_len);
+}
+
+static ssize_t open_count_show(struct device *dev,
+                               struct device_attribute *attr, char *buf) {
+    return sprintf(buf, "%d\n", open_count);
+}
+
+static ssize_t last_data_show(struct device *dev,
+                              struct device_attribute *attr, char *buf) {
+    if (buffer_len > 0)
+        return sprintf(buf, "%s\n", device_buffer);
+    return sprintf(buf, "(empty)\n");
+}
+
+static DEVICE_ATTR_RO(buffer_len);
+static DEVICE_ATTR_RO(open_count);
+static DEVICE_ATTR_RO(last_data);
+
+static struct attribute *lab2_attrs[] = {
+    &dev_attr_buffer_len.attr,
+    &dev_attr_open_count.attr,
+    &dev_attr_last_data.attr,
+    NULL,
+};
+
+static struct attribute_group lab2_attr_group = {
+    .attrs = lab2_attrs,
+};
 static int __init lab2_init(void) {
     int ret;
     pr_info("lab2_driver: initializing module\n");
@@ -89,6 +150,12 @@ static int __init lab2_init(void) {
     ret = register_chrdev(major_number, DEVICE_NAME, &lab2_fops);
     if (ret < 0) {
         pr_err("lab2_driver: register_chrdev failed: %d\n", ret);
+/* Tạo /proc/lab2_info */
+    proc_entry = proc_create("lab2_info", 0444, NULL, &lab2_proc_fops);
+    if (!proc_entry)
+        pr_warn("lab2_driver: failed to create /proc/lab2_info\n");
+    else
+        pr_info("lab2_driver: /proc/lab2_info created\n");
         return ret;
     }
     /* Tạo device class và device node tự động trong /sys */
@@ -104,11 +171,19 @@ static int __init lab2_init(void) {
         unregister_chrdev(major_number, DEVICE_NAME);
         return PTR_ERR(lab2_device);
     }
-    pr_info("lab2_driver: loaded, major=%d\n", major_number);
+/* Đăng ký sysfs attribute group */
+    ret = sysfs_create_group(&lab2_device->kobj, &lab2_attr_group);
+    if (ret)
+        pr_warn("lab2_driver: sysfs_create_group failed\n");  
+  pr_info("lab2_driver: loaded, major=%d\n", major_number);
     return 0;
 }
 static void __exit lab2_exit(void) {
-    device_destroy(lab2_class, MKDEV(major_number, 0));
+   if (proc_entry)
+        proc_remove(proc_entry);
+
+sysfs_remove_group(&lab2_device->kobj, &lab2_attr_group);
+ device_destroy(lab2_class, MKDEV(major_number, 0));
     class_destroy(lab2_class);
     unregister_chrdev(major_number, DEVICE_NAME);
     pr_info("lab2_driver: module unloaded\n");
