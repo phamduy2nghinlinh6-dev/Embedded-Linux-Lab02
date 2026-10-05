@@ -1,0 +1,1 @@
+cmd_/home/duy/embedded_lab2/driver/Module.symvers := sed 's/\.ko$$/\.o/' /home/duy/embedded_lab2/driver/modules.order | scripts/mod/modpost    -o /home/duy/embedded_lab2/driver/Module.symvers -e    -n -w -T -
