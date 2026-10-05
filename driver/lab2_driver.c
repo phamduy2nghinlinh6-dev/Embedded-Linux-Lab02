@@ -1,4 +1,4 @@
-
+	
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 #include <linux/module.h>
@@ -150,13 +150,14 @@ static int __init lab2_init(void) {
     ret = register_chrdev(major_number, DEVICE_NAME, &lab2_fops);
     if (ret < 0) {
         pr_err("lab2_driver: register_chrdev failed: %d\n", ret);
+	return ret;
+}
 /* Tạo /proc/lab2_info */
     proc_entry = proc_create("lab2_info", 0444, NULL, &lab2_proc_fops);
-    if (!proc_entry)
+    if (!proc_entry) {
         pr_warn("lab2_driver: failed to create /proc/lab2_info\n");
-    else
+   } else{
         pr_info("lab2_driver: /proc/lab2_info created\n");
-        return ret;
     }
     /* Tạo device class và device node tự động trong /sys */
     lab2_class = class_create(THIS_MODULE, CLASS_NAME);
