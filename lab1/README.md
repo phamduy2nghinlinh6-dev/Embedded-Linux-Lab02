@@ -28,13 +28,13 @@ This lab builds a minimal embedded Linux system for an ARMv7-A Cortex-A9 target 
 | Development host | Ubuntu Linux, x86-64 |
 | Target architecture | ARMv7-A |
 | Target CPU | Cortex-A9 |
-| QEMU machine | `vexpress-a9` |
+| QEMU machine | vexpress-a9 |
 | Linux kernel | 5.15 |
 | U-Boot | 2022.04 |
 | BusyBox | 1.35.0, statically linked |
-| Cross-toolchain prefix | `arm-linux-gnueabihf-` |
+| Cross-toolchain prefix | arm-linux-gnueabihf- |
 | Linux boot test | 512 MiB RAM, two virtual CPUs |
-| Final initramfs filename | `rootfs-final.cpio.gz` |
+| Final initramfs filename | rootfs-final.cpio.gz |
 
 The original completed workspace is `~/Embedded-Linux-Lab02/lab1`. The rebuild example below uses a separate directory, `~/Embedded-Linux-Lab02/lab1-rebuild`.
 
