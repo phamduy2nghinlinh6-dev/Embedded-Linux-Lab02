@@ -61,3 +61,13 @@ Boot the included, tested Linux images without rebuilding them. Install `qemu-sy
 
 ```bash
 sudo apt install qemu-system-arm
+qemu-system-arm \
+  -M vexpress-a9 \
+  -cpu cortex-a9 \
+  -m 512M \
+  -smp 2 \
+  -nographic \
+  -kernel lab1/output/zImage \
+  -dtb lab1/output/vexpress-v2p-ca9.dtb \
+  -initrd lab1/output/rootfs-final.cpio.gz \
+  -append 'console=ttyAMA0,115200 rdinit=/init mem=512M'
