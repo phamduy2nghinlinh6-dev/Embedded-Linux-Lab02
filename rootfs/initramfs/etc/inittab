@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+::sysinit:/etc/init.d/rcS
+::askfirst:-/bin/sh
+::ctrlaltdel:/sbin/reboot
+::shutdown:/sbin/swapoff -a
+::shutdown:/bin/umount -a -r
+::restart:/sbin/init
+=======
 # /etc/inittab - BusyBox init configuration
 # Format: <id>:<runlevel>:<action>:<process>
 
@@ -12,3 +20,4 @@
 
 # Cleanup trước khi shutdown
 ::shutdown:/bin/umount -a -r
+>>>>>>> 7c989a92f4a8aa6a5a24ab36998d2d9de3bc67e7
